@@ -1,0 +1,10 @@
+{
+  "name": "recipe-concierge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "services/*", "libs/*"],
+  "scripts": {
+    "test": "echo \"No tests\""
+  }
+}
