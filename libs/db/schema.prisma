@@ -1,0 +1,115 @@
+// Prisma schema for Recipe Concierge
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String?  @unique
+  auth_provider  String?
+  created_at     DateTime @default(now())
+  profile        Profile?
+  shoppingLists  ShoppingList[]
+  feedbacks      Feedback[]
+}
+
+model Profile {
+  user_id           String   @id
+  diets             String[]
+  exclusions        String[]
+  skill_level       Int
+  max_active_minutes Int
+  goal_tag          String
+  updated_at        DateTime @updatedAt
+  user              User     @relation(fields: [user_id], references: [id])
+}
+
+model Recipe {
+  id              String   @id @default(uuid())
+  external_source_id String?
+  title           String
+  hero_image      String?
+  prep_minutes    Int
+  cook_minutes    Int
+  skill_level     Int
+  calories        Float?
+  macros          Json?
+  season_tags     String[]
+  created_at      DateTime @default(now())
+  ingredients     RecipeIngredient[]
+  feedbacks       Feedback[]
+}
+
+model Ingredient {
+  id            String   @id @default(uuid())
+  name          String
+  synonyms      String[]
+  default_unit  String?
+  recipeIngredients RecipeIngredient[]
+  substitutionsFrom Substitution[] @relation("FromIngredient")
+  substitutionsTo   Substitution[] @relation("ToIngredient")
+}
+
+model RecipeIngredient {
+  id             String   @id @default(uuid())
+  recipe         Recipe   @relation(fields: [recipe_id], references: [id])
+  recipe_id      String
+  ingredient     Ingredient @relation(fields: [ingredient_id], references: [id])
+  ingredient_id  String
+  quantity       Float
+  unit           String
+  original_line  String
+
+  @@index([recipe_id, ingredient_id])
+}
+
+model Substitution {
+  id             String   @id @default(uuid())
+  ingredient     Ingredient @relation("FromIngredient", fields: [ingredient_id], references: [id])
+  ingredient_id  String
+  substitute     Ingredient @relation("ToIngredient", fields: [substitute_id], references: [id])
+  substitute_id  String
+  reason         String
+  ratio          Float?
+  instruction    String?
+  confidence     Int
+}
+
+model ShoppingList {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [user_id], references: [id])
+  user_id      String
+  title        String?
+  generated_from Json?
+  created_at   DateTime @default(now())
+  items        ListItem[]
+}
+
+model ListItem {
+  id             String   @id @default(uuid())
+  list           ShoppingList @relation(fields: [list_id], references: [id])
+  list_id        String
+  ingredient     Ingredient   @relation(fields: [ingredient_id], references: [id])
+  ingredient_id  String
+  quantity       Float
+  unit           String
+  original_lines Json
+  checked        Boolean @default(false)
+}
+
+model Feedback {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    String
+  recipe     Recipe   @relation(fields: [recipe_id], references: [id])
+  recipe_id  String
+  rating     Int
+  tweaks     String?
+  created_at DateTime @default(now())
+}
