@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+  redis:
+    image: redis:7
+    ports:
+      - 6379:6379
+  redpanda:
+    image: vectorized/redpanda
+    ports:
+      - 9092:9092
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    ports:
+      - 9000:9000
