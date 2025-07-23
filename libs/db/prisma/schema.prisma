@@ -1,0 +1,42 @@
+// Simplified Prisma schema capturing core tables
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String?  @unique
+  authProvider String
+  createdAt    DateTime @default(now())
+  profile      Profile?
+}
+
+model Profile {
+  userId          String   @id
+  user            User     @relation(fields: [userId], references: [id])
+  diets           String[]
+  exclusions      String[]
+  skillLevel      Int
+  maxActiveMinutes Int
+  goalTag         String?
+  updatedAt       DateTime @updatedAt
+}
+
+model Recipe {
+  id          String   @id @default(uuid())
+  externalSourceId String?
+  title       String
+  heroImage   String?
+  prepMinutes Int
+  cookMinutes Int
+  skillLevel  Int
+  calories    Decimal?
+  macros      Json
+  seasonTags  String[]
+  createdAt   DateTime @default(now())
+}

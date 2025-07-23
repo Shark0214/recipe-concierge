@@ -1,0 +1,13 @@
+{
+  "name": "recipe-concierge",
+  "private": true,
+  "workspaces": [
+    "libs/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "lint": "echo 'TODO: add linter'",
+    "test": "echo 'TODO: add tests'"
+  }
+}
