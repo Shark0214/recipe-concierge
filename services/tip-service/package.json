@@ -1,0 +1,6 @@
+{
+  "name": "@recipe-concierge/tip-service",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "scripts": {"start": "node dist/index.js"}
+}
