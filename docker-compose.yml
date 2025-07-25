@@ -17,6 +17,8 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:secret@db:5432/recipes
       PORT: 3000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SPOONACULAR_KEY: ${SPOONACULAR_KEY}
     depends_on:
       db:
         condition: service_healthy
