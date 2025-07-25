@@ -1,17 +1,21 @@
-import { Recipe } from '../domain/Recipe';
+import { PrismaClient, Recipe as RecipeModel } from '@prisma/client'
+import { Recipe, RecipeInput } from '../domain/Recipe'
 
 export class RecipeRepo {
-  private store = new Map<string, Recipe>();
+  constructor(private db: PrismaClient) {}
 
-  save(recipe: Recipe) {
-    this.store.set(recipe.info.id, recipe);
+  async save(recipe: Recipe) {
+    const data = recipe.info
+    await this.db.recipe.create({ data })
   }
 
-  find(id: string): Recipe | undefined {
-    return this.store.get(id);
+  async find(id: string): Promise<Recipe | undefined> {
+    const r = await this.db.recipe.findUnique({ where: { id } })
+    return r ? new Recipe(r as RecipeInput) : undefined
   }
 
-  all(): Recipe[] {
-    return Array.from(this.store.values());
+  async allByCsa(csaId: string): Promise<Recipe[]> {
+    const rows = await this.db.recipe.findMany({ where: { csaId } })
+    return rows.map(r => new Recipe(r as RecipeInput))
   }
 }

@@ -1,11 +1,16 @@
 # Recipe Concierge
 
-This repository hosts the monorepo for the Recipe Concierge application.
-The layout follows a workspace based structure with separate folders for
-shared libraries, individual services, infrastructure code and client apps.
+This monorepo contains the demo "Recipe Concierge" stack.
+Front-end widgets live under `apps/`, backend services under `services/` and shared code in `libs/`.
 
-See `libs/` for shared code, `services/` for back-end micro services and
-`apps/` for front-end packages. Infrastructure configuration resides under
-`infra/`.
+![diagram](docs/ARCHITECTURE.md)
 
-See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for instructions on running the example recipe service.
+## Quickstart
+
+```bash
+pnpm install
+docker compose up -d
+```
+
+Then POST `http://localhost:3000/suggestions` with a JSON body
+`{"items":["tomato","basil"]}` and include the bundled widget on any page.
