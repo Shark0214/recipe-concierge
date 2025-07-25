@@ -1,52 +1,39 @@
-import express from 'express';
-import { RecipeRepo } from './infra/RecipeRepo';
-import { RecipeController } from './controllers/RecipeController';
-import { suggestRecipes, RecipeCandidate } from '@recipe-concierge/recipe-engine';
-import { RecipeInput } from './domain/Recipe';
+import express from 'express'
+import { RecipeRepo } from './infra/RecipeRepo'
+import { suggestRecipes, RecipeCandidate } from '@recipe-concierge/recipe-engine'
+import { db } from './db'
+import { apiKey } from './middleware/apiKey'
+import expressPino from 'express-pino-logger'
+import { logger } from './logger'
+import { collectDefaultMetrics, Registry } from 'prom-client'
 
-const repo = new RecipeRepo();
-const controller = new RecipeController(repo);
+const repo = new RecipeRepo(db)
+const reg = new Registry()
+collectDefaultMetrics({ register: reg })
 
-const sampleRecipes: RecipeInput[] = [
-  {
-    id: '1',
-    title: 'Tomato Pasta',
-    ingredients: ['tomato', 'pasta', 'basil'],
-    prepMinutes: 10,
-    cookMinutes: 20,
-    skillLevel: 1,
-  },
-  {
-    id: '2',
-    title: 'Veggie Stir Fry',
-    ingredients: ['broccoli', 'carrot', 'soy sauce'],
-    prepMinutes: 15,
-    cookMinutes: 10,
-    skillLevel: 1,
-  },
-];
+export function start(port: number = Number(process.env.PORT) || 3000) {
+  const app = express()
+  app.use(express.json())
+  app.use(expressPino({ logger }))
+  app.use(apiKey)
 
-for (const data of sampleRecipes) {
-  controller.import(data);
-}
+  app.get('/metrics', async (_req, res) => {
+    res.set('Content-Type', reg.contentType)
+    res.end(await reg.metrics())
+  })
 
-export function start(port: number = 3000) {
-  const app = express();
-  app.use(express.json());
-
-  app.post('/suggestions', (req, res) => {
-    const items: string[] = req.body.items || [];
-    const n: number = req.body.n || 3;
-    const candidates: RecipeCandidate[] = repo.all().map((r) => r.info);
-    const suggestions = suggestRecipes(items, candidates, n);
-    res.json({ recipes: suggestions });
-  });
+  app.post('/suggestions', async (req, res) => {
+    const items: string[] = req.body.items || []
+    const n: number = req.body.n || 3
+    const recipes = await repo.allByCsa((req as any).csaId)
+    const candidates: RecipeCandidate[] = recipes.map(r => r.info)
+    const suggestions = suggestRecipes(items, candidates, n)
+    res.json(suggestions)
+  })
 
   app.listen(port, () => {
-    console.log(`recipe-service listening on ${port}`);
-  });
+    logger.info(`recipe-service listening on ${port}`)
+  })
 }
 
-if (require.main === module) {
-  start();
-}
+if (require.main === module) start()
