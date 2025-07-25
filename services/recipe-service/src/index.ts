@@ -6,6 +6,7 @@ import { apiKey } from './middleware/apiKey'
 import expressPino from 'express-pino-logger'
 import { logger } from './logger'
 import { collectDefaultMetrics, Registry } from 'prom-client'
+import { generateRecipes } from './recipeGen'
 
 const repo = new RecipeRepo(db)
 const reg = new Registry()
@@ -29,6 +30,18 @@ export function start(port: number = Number(process.env.PORT) || 3000) {
     const candidates: RecipeCandidate[] = recipes.map(r => r.info)
     const suggestions = suggestRecipes(items, candidates, n)
     res.json(suggestions)
+  })
+
+  app.post('/recipes', async (req, res) => {
+    try {
+      const items: string[] = req.body.items || []
+      const servings: number | undefined = req.body.servings
+      const recipes = await generateRecipes(items, { servings })
+      res.json(recipes)
+    } catch (err) {
+      logger.error({ err }, 'generation failed')
+      res.status(500).json({ error: 'generation_failed' })
+    }
   })
 
   app.listen(port, () => {
